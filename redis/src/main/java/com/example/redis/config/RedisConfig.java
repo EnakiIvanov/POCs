@@ -9,7 +9,7 @@ import org.testcontainers.utility.DockerImageName;
 @Configuration
 public class RedisConfig {
 
-  private static final String REDIS_IMAGE_NAME = "bitnami/redis:7.0.11-debian-11-r12";
+  private static final String REDIS_IMAGE_NAME = "redis:8.2.2-alpine";
 
   @Bean
   @ServiceConnection
