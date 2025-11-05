@@ -1,21 +1,41 @@
 package com.example.redis.config;
 
 import com.example.redis.stream.EventConsumer;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.StreamOffset;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 
+@Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class RedisStreamConfig {
 
   public static final String STREAM_NAME = "demo-stream";
+  public static final String GROUP_NAME = "demo-group";
 
-  //The config wires up a background listener. Instead of me polling in a loop, Spring handles the Redis subscription.
-  //When new messages appear in the stream, my EventConsumer gets called automatically.
+  private final StringRedisTemplate redisTemplate;
+
+  /**
+   * Creates a consumer group in Redis for the specified stream.
+   * The group must be created first so Redis recognizes it;
+   * otherwise, consumer group operations (e.g. XREADGROUP) will fail.
+   *
+   * STREAM_NAME the name of the stream to be consumed
+   * GROUP_NAME  the name of the consumer group
+   */
+  @PostConstruct
+  public void init() {
+    //redisTemplate.opsForStream().createGroup(STREAM_NAME, GROUP_NAME);
+  }
+
   @Bean
   public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamContainer(
       RedisConnectionFactory factory, EventConsumer consumer) {

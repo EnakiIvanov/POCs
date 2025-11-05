@@ -2,6 +2,7 @@ package com.example.redis.controller;
 
 import com.example.redis.model.User;
 import com.example.redis.service.UserService;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,12 +37,23 @@ public class UserController {
   }
 
   @PostMapping
-  public void addUser(@RequestBody User user) {
-    userService.addUser(user);
+  public void addUser(@RequestBody UserDto user) {
+    userService.addUser(toUser(user));
   }
 
   @DeleteMapping("/{id}")
   public void removeUserById(@PathVariable String id) {
     userService.deleteById(id);
   }
+
+  private User toUser(UserDto dto) {
+    return User.builder()
+        .id(dto.id)
+        .name(dto.name)
+        .age(dto.age)
+        .updated(LocalDateTime.now())
+        .build();
+  }
+
+  public record UserDto(String id, String name, int age){}
 }

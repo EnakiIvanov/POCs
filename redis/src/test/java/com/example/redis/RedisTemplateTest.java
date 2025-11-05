@@ -39,9 +39,13 @@ class RedisTemplateTest {
 
     redisTemplate.opsForHash().putAll("user:1", user);
     String actualEmail = (String) redisTemplate.opsForHash().get("user:1", "email");
+    var storedUser = redisTemplate.opsForHash().entries("user:1");
 
     assertThat(actualEmail)
         .isEqualTo(expectedEmail);
+
+    assertThat(storedUser)
+        .isEqualTo(user);
   }
 
   @Test
@@ -77,7 +81,8 @@ class RedisTemplateTest {
     redisTemplate.opsForZSet().add("leaderboard", "player2", 200);
 
     Set<String> topPlayers = redisTemplate.opsForZSet()
-        .reverseRange("leaderboard", 0, -1);//Descending order(Highest score first)
+        .reverseRange("leaderboard", 0, -1);//Descending order(Highest to lowest score)
+        //.range -> Ascending order(Lowest to Highest score)
 
     assertThat(topPlayers)
         .containsExactly("player2", "player1");
