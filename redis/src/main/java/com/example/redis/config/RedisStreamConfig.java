@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
@@ -24,6 +26,7 @@ public class RedisStreamConfig {
   private final StringRedisTemplate redisTemplate;
 
   /**
+   *
    * Creates a consumer group in Redis for the specified stream.
    * The group must be created first so Redis recognizes it;
    * otherwise, consumer group operations (e.g. XREADGROUP) will fail.
@@ -33,10 +36,10 @@ public class RedisStreamConfig {
    */
   @PostConstruct
   public void init() {
-    //redisTemplate.opsForStream().createGroup(STREAM_NAME, GROUP_NAME);
+    redisTemplate.opsForStream().createGroup(STREAM_NAME, GROUP_NAME);
   }
 
-  @Bean
+  @Bean(initMethod = "start", destroyMethod = "stop")
   public StreamMessageListenerContainer<String, MapRecord<String, String, String>> streamContainer(
       RedisConnectionFactory factory, EventConsumer consumer) {
 
@@ -52,10 +55,18 @@ public class RedisStreamConfig {
 
     //Subscribes a consumer to the stream.
     //StreamOffset.latest(STREAM_KEY) means: “Only listen for new entries/events added after now.”
-    container.receive(StreamOffset.latest(STREAM_NAME), consumer);
 
-    //Starts the listener in the background
-    container.start();
+//    container.receive(StreamOffset.latest(STREAM_NAME), consumer);
+//    container.receive(StreamOffset.latest(STREAM_NAME),
+//        msg -> log.info("Lamba consumer received {}", msg.getValue()));
+
+
+    container.receive(Consumer.from(GROUP_NAME, "consumer1"),
+        StreamOffset.create(STREAM_NAME, ReadOffset.lastConsumed()),
+        consumer);
+    container.receive(Consumer.from(GROUP_NAME, "consumer2"),
+        StreamOffset.create(STREAM_NAME, ReadOffset.lastConsumed()),
+        msg -> log.info("Lamba consumer received {}", msg.getValue()));
 
     //Return the container as a @Bean.
     //Makes it part of the Spring context, so it’s started automatically with the app
