@@ -23,6 +23,7 @@
 
   <modules>
     <module>redis</module>
+    <module>aop</module>
   </modules>
 
   <properties>
