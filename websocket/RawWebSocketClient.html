@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<button onclick="connect()">Connect</button>
+<button onclick="sendMessage()">Send</button>
+<div id="messages"></div>
+
+<script>
+    let socket;
+
+    function connect() {
+        socket = new WebSocket("ws://localhost:8080/ws");
+
+        socket.onopen = () => {
+            console.log("Connected!");
+        };
+
+        socket.onmessage = event => {
+          const messages = document.getElementById("messages");
+          messages.innerHTML += `<p>${event.data}</p>`;
+        };
+
+        socket.onclose = () => {
+            console.log("Disconnected");
+        };
+    }
+
+    function sendMessage() {
+        socket.send("Hello from browser!");
+    }
+</script>
+
+</body>
+</html>
