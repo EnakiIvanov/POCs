@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Chat</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f1f3f6;
+      color: #1f2937;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .container {
+      width: 900px;
+      max-width: 95vw;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+      overflow: hidden;
+    }
+
+    /* Login */
+
+    #login {
+      width: 400px;
+      max-width: 100%;
+      margin: auto;
+      padding: 34px;
+    }
+
+    .login-icon {
+      width: 46px;
+      height: 46px;
+      margin: 0 auto 18px;
+      border-radius: 12px;
+      background: #eff6ff;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    #login h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #6b7280;
+      margin: 0 0 28px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+      background: white;
+      color: #1f2937;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-group input::placeholder {
+      color: #9ca3af;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .primary-button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-weight: 600;
+      transition: background 0.15s, transform 0.05s;
+    }
+
+    .primary-button:hover {
+      background: #1d4ed8;
+    }
+
+    .primary-button:active {
+      transform: translateY(1px);
+    }
+
+    /* Chat */
+
+    #chat {
+      display: none;
+    }
+
+    .chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .room-name {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .room-name span {
+      color: #6b7280;
+      font-weight: normal;
+    }
+
+    .disconnect-button {
+      padding: 7px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 7px;
+      background: white;
+      color: #4b5563;
+      font-size: 13px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .disconnect-button:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+
+    .chat-body {
+      display: grid;
+      grid-template-columns: 1fr 210px;
+      min-height: 500px;
+    }
+
+    /* Messages */
+
+    .messages-container {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 500px;
+      background: #fcfcfd;
+    }
+
+    .message {
+      margin-bottom: 14px;
+      max-width: 75%;
+    }
+
+    .message-user {
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    .message-content {
+      display: inline-block;
+      padding: 9px 12px;
+      border-radius: 10px;
+      background: #f3f4f6;
+      color: #1f2937;
+      font-size: 14px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .system-message {
+      margin: 12px 0;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    .message.own-message {
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .message.own-message .message-user {
+      color: #2563eb;
+    }
+
+    .message.own-message .message-content {
+      background: #eff6ff;
+      color: #1e40af;
+    }
+
+    .you-label {
+      margin-left: auto;
+      padding: 2px 6px;
+      border-radius: 5px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .input-area {
+      padding: 13px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 8px;
+      background: white;
+    }
+
+    .input-area input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .input-area input::placeholder {
+      color: #9ca3af;
+    }
+
+    .input-area input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .send-button {
+      padding: 10px 17px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-weight: 600;
+      transition: background 0.15s, transform 0.05s;
+    }
+
+    .send-button:hover {
+      background: #1d4ed8;
+    }
+
+    .send-button:active {
+      transform: translateY(1px);
+    }
+
+    .send-button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    /* Users */
+
+    .users-panel {
+      border-left: 1px solid #e5e7eb;
+      padding: 20px;
+      background: #f9fafb;
+    }
+
+    .users-panel h2 {
+      margin: 0 0 4px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .user-count {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    #users {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #users li {
+      display: flex;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 13px;
+      color: #374151;
+    }
+
+    #users li::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-right: 9px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        align-items: flex-start;
+        padding: 20px 0;
+      }
+
+      .container {
+        max-width: calc(100vw - 24px);
+      }
+
+      .chat-body {
+        grid-template-columns: 1fr;
+      }
+
+      .users-panel {
+        border-left: none;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      #messages {
+        max-height: 400px;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- Login -->
+
+  <div id="login" class="card">
+
+    <div class="login-icon">💬</div>
+
+    <h1>WebSocket Chat</h1>
+    <p class="subtitle">Choose your name and room to get started</p>
+
+    <div class="form-group">
+      <label for="username">Name</label>
+      <input id="username" type="text" placeholder="Your name">
+    </div>
+
+    <div class="form-group">
+      <label for="room">Room</label>
+      <select id="room">
+        <option value="General">General</option>
+        <option value="Programming">Programming</option>
+      </select>
+    </div>
+
+    <button id="connectButton" class="primary-button">Connect</button>
+
+  </div>
+
+  <!-- Chat -->
+
+  <div id="chat" class="card">
+
+    <div class="chat-header">
+      <h1 class="room-name">
+        Room: <span id="roomTitle"></span>
+      </h1>
+
+      <button id="unsubscribeBtn" class="disconnect-button">Disconnect</button>
+    </div>
+
+    <div class="chat-body">
+
+      <div class="messages-container">
+
+        <div id="messages"></div>
+
+        <div class="input-area">
+          <input id="message" type="text" placeholder="Type a message...">
+
+          <button id="sendButton" class="send-button">Send</button>
+        </div>
+
+      </div>
+
+      <aside class="users-panel">
+        <h2>Users</h2>
+        <div id="userCount" class="user-count">0 users</div>
+
+        <ul id="users"></ul>
+      </aside>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+  import { Client } from 'https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.2.1/esm6/index.js';
+
+  let client;
+  let username;
+  let room;
+
+  document
+  .getElementById('connectButton')
+  .addEventListener('click', connect);
+
+  document
+  .getElementById('sendButton')
+  .addEventListener('click', sendMessage);
+
+  document
+  .getElementById('unsubscribeBtn')
+  .addEventListener('click', disconnect);
+
+  document
+  .getElementById('message')
+  .addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      sendMessage();
+    }
+  });
+
+  function connect() {
+    username = document.getElementById('username').value.trim();
+    room = document.getElementById('room').value.trim();
+
+    if (!username) {
+      alert('Please enter your name.');
+      return;
+    }
+
+    if (!room) {
+      alert('Please select a room.');
+      return;
+    }
+
+    document.getElementById('roomTitle').textContent = room;
+
+    client = new Client({
+      brokerURL: 'ws://localhost:8080/ws',
+
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
+      reconnectDelay: 0,
+
+      connectHeaders: {
+        username: username,
+        room: room
+      },
+
+      onConnect: () => {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('chat').style.display = 'block';
+
+        client.subscribe(`/topic/chat/${room}`, handleMessage);
+      },
+
+      onStompError: frame => {
+        console.log('STOMP error:', frame);
+
+        let error;
+
+        try {
+          error = JSON.parse(frame.body);
+        } catch {
+          alert('Something went wrong.');
+          return;
+        }
+
+        switch (error.code) {
+          case 'SESSION_NOT_REGISTERED':
+          case 'ROOM_FULL':
+          case 'INVALID_CONNECTION':
+          case 'INVALID_SUBSCRIPTION':
+            alert(error.message);
+            break;
+
+          default:
+            alert('Something went wrong.');
+        }
+      }
+    });
+
+    client.activate();
+  }
+
+  function handleMessage(message) {
+    const data = JSON.parse(message.body);
+
+    switch (data.type) {
+      case 'CHAT':
+        displayChatMessage(data);
+        break;
+
+      case 'SYSTEM':
+        displaySystemMessage(data);
+        break;
+
+      case 'ROOM_STATE':
+        updateRoomState(data);
+        break;
+
+      default:
+        console.warn('Unknown message type:', data.type);
+    }
+  }
+
+  function displayChatMessage(data) {
+    const messages = document.getElementById('messages');
+
+    const messageElement = document.createElement('div');
+    messageElement.className = 'message';
+
+    if (data.sender === username) {
+      messageElement.classList.add('own-message');
+    }
+
+    const usernameElement = document.createElement('div');
+    usernameElement.className = 'message-user';
+    usernameElement.textContent = data.sender;
+
+    const contentElement = document.createElement('div');
+    contentElement.className = 'message-content';
+    contentElement.textContent = data.content;
+
+    messageElement.appendChild(usernameElement);
+    messageElement.appendChild(contentElement);
+
+    messages.appendChild(messageElement);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function displaySystemMessage(data) {
+    const messages = document.getElementById('messages');
+
+    const messageElement = document.createElement('div');
+    messageElement.className = 'system-message';
+
+    messageElement.textContent = `${data.sender} ${data.content}`;
+
+    messages.appendChild(messageElement);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function updateRoomState(data) {
+    const usersElement = document.getElementById('users');
+    const countElement = document.getElementById('userCount');
+
+    usersElement.replaceChildren();
+
+    data.users.forEach(user => {
+      const userElement = document.createElement('li');
+
+      const nameElement = document.createElement('span');
+      nameElement.textContent = user;
+
+      userElement.appendChild(nameElement);
+
+      if (user === username) {
+        const youElement = document.createElement('span');
+        youElement.className = 'you-label';
+        youElement.textContent = 'You';
+
+        userElement.appendChild(youElement);
+      }
+
+      usersElement.appendChild(userElement);
+    });
+
+    countElement.textContent =
+        `${data.userCount} ${data.userCount === 1 ? 'user' : 'users'}`;
+  }
+
+  function sendMessage() {
+    if (!client || !client.connected) {
+      return;
+    }
+
+    const input = document.getElementById('message');
+    const message = input.value.trim();
+
+    if (!message) {
+      return;
+    }
+
+    client.publish({
+      destination: '/app/chat',
+      body: JSON.stringify({
+        content: message
+      })
+    });
+
+    input.value = '';
+    input.focus();
+  }
+
+  function disconnect() {
+    if (!client || !client.connected) {
+      return;
+    }
+
+    client.deactivate();
+
+    client = null;
+
+    document.getElementById('login').style.display = 'block';
+    document.getElementById('chat').style.display = 'none';
+
+    document.getElementById('messages').replaceChildren();
+    document.getElementById('users').replaceChildren();
+
+    document.getElementById('userCount').textContent = '0 users';
+  }
+
+</script>
+
+</body>
+</html>

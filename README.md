@@ -6,6 +6,7 @@ Collection of small projects used to learn and experiment with different technol
 
 - [AOP](aop/README.md) - Aspect-Oriented Programming with Spring
 - [Redis](redis/README.md) - Redis integration with Spring Boot
+- [WebSocket](websocket/README.md) - WebSocket integration with Spring Boot
 
 ## Technologies
 

@@ -24,6 +24,7 @@
   <modules>
     <module>redis</module>
     <module>aop</module>
+    <module>websocket</module>
   </modules>
 
   <properties>
