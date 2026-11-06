@@ -25,6 +25,7 @@
     <module>redis</module>
     <module>aop</module>
     <module>websocket</module>
+    <module>kafka</module>
   </modules>
 
   <properties>

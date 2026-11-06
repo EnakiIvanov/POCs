@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: kafka-poc
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kafka_poc
+    username: kafka_poc
+    password: kafka_poc
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    consumer:
+      group-id: kafka-poc-group
+      # earliest - Start from the earliest available retained record
+      # latest - Start from new records arriving after the consumer starts
+      # none - Throw an exception if no valid offset exists
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.example.kafka.messaging
+        # read_uncommitted - can read records from aborted transactions.
+        # read_committed - only reads records belonging to committed transactions.
+        isolation.level: read_committed
+      # When enabled, the Kafka client periodically commits offsets independently of whether the application has successfully processed the records.
+      enable-auto-commit: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # 0 - Don't wait for broker acknowledgement
+      # 1 - Wait for the leader broker
+      # all - Wait for all current in-sync replicas
+      acks: all
+      properties:
+        # When enable.idempotence=true, Kafka assigns the producer an ID (PID) and uses sequence numbers for messages sent to each partition.
+        # The broker can recognize that a retried message has already been written and avoid appending it again.
+        enable.idempotence: true
+      transaction-id-prefix: kafka-poc-${random.uuid}-
+      retries: 10
+    listener:
+      ack-mode: batch
