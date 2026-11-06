@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: kafka-poc
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kafka_poc
+    username: kafka_poc
+    password: kafka_poc
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    consumer:
+      group-id: kafka-poc-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.example.kafka.messaging
+        isolation.level: read_committed
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        # When enable.idempotence=true, Kafka assigns the producer an ID (PID) and uses sequence numbers for messages sent to each partition.
+        # The broker can recognize that a retried message has already been written and avoid appending it again.
+        enable.idempotence: true
+      transaction-id-prefix: kafka-poc-${random.uuid}-
